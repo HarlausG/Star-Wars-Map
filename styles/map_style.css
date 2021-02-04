@@ -6,12 +6,37 @@ html, body {
 }
 
 .content {
-    display:flex;
+    display:grid;
+    grid-template-columns: 20% 80%;
+    grid-template-rows: 10% 80% 10%;
+    grid-template-areas:"header header"
+                        "aside map"
+                        "footer footer";
     height:100%;
 }
 
+#header {
+    grid-area:header;
+    background-color:#21406c;
+}
+#header h1 {
+    color:#ffffff;
+    font-size:50px;
+    text-align: center;
+    margin-top:20px;
+}
+#header h1 a{
+    color:#ffffff;
+    text-decoration:none;
+}
+
+#footer {
+    grid-area:footer;
+    background-color:#21406c;
+}
+
 #map {
-    flex:85%;
+    grid-area:map;
     background:black;
 }
 
@@ -24,9 +49,13 @@ html, body {
     transition: all .1s;
 }
 
+.Coruscant {
+    background-image:url("../images/planete/coruscant.png");
+}
+
 
 .div-input {
-    flex:15%;
+    grid-area:aside;
     height:100%;
 }
 
@@ -57,4 +86,31 @@ html, body {
 .input-response:hover {
     background-color: #dddddd;
     cursor:pointer;
+}
+
+
+.planet-name {
+    display:none;
+    color:#ffffff;
+    font-size:12px;
+    margin-left:0px;
+    margin-top:0px;
+}
+
+.planet-name-display {
+    display:block;
+}
+
+.leaflet-container a {
+    color:#000000;
+}
+
+.popup-lien {
+    color:#000000;
+    font-size:18px;
+    text-decoration: none;
+}
+
+.popup-lien:hover {
+    color:#555555;
 }

@@ -3,128 +3,116 @@
 <head>
     <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Star Wars Map</title>
-    <link rel="stylesheet" href="styles/leaflet.css"/>
+    <link rel="stylesheet" href="leaflet.css"/>
     <link rel="stylesheet" href="styles/map_style.css"/>
 
     
     <script type="text/javascript" src="scripts/leaflet.js"></script>
     <script type="text/javascript" src="scripts/data.js"></script>
-    <script type="text/javascript" src="scripts/initializeMap.js"></script>
     
 </head>
 
 <body>
     <div class="content">
-        <div class="div-input">
-            <input type="text" id="input" onkeyup="search(this)"  placeholder="Search for planets"/>
+        <header id="header">
+            <h1><a href="#">STAR WARS MAP</a></h1>
+        </header>
+        <div id="div-input">
+            <input type="search" id="input" onkeyup="search()"  placeholder="Search for planets"/>
         </div>
         <div id="map"></div>
+        <footer id="footer"></footer>
     </div>
     
     <script type="text/javascript">
-        function search(input){
-            let parent = document.querySelector(".div-input");
-            let planets = parent.querySelectorAll("p");
-            for(let p of planets){
-                console.log(p);
-                parent.removeChild(p);
-            }
-            if(input.value.length > 0){
-                let word = input.value.toUpperCase();
-                let indice = input.value.length;
-                for(let m of markers){
-                    let marker = m._icon.id.toUpperCase();
-                    let show = true;
-                    for(let i=0; i < indice;i++){
-                        if(word[i] != marker[i]){
-                            show = false;
-                        }
-                    }
-                    if(show){
-                        let p = document.createElement("p");
-                        p.textContent = m._icon.id;
-                        p.classList.add("input-response");
-                        input.parentNode.appendChild(p);
-                    }
-                }
-            }
-        }
-
-        /* initialisation de la map */
+        
         let map = L.map('map',{
             crs:L.CRS.Simple,
             minZoom:1,
-            maxZoom:4
+            maxZoom:5,
         }).setView([0,0],1);
         
-        
-        let area = new L.LatLngBounds(
-            map.unproject(SW,map.getMaxZoom()),
-            map.unproject(NE,map.getMaxZoom())
-        );
-        
-        /* initialisation des tiles */
-        L.tileLayer('tiles/{z}/{x}/{y}.png',{
-            crs:L.CRS.Simple,
-            minZoom:1,
-            maxZoom:4,
-            noWrap:true,
-            bounds:area
-        }).addTo(map);
-        
-        /* Peux pas bouger en-dehors de la map */
-        map.setMaxBounds(area);
-        let markers = createMarker(data);
 
-        /* Resize les marker en fonction du zoom */
-        function setSizePlanet(size){
-            let newSize = ''+size+'px';
-            let planete = document.querySelectorAll(".planete");
-            for(let p of planete){
-                p.style.width = newSize;
-                p.style.height = newSize;
-                p.style.backgroundSize = newSize+' '+newSize;
-                p.style.marginLeft = ''+(-(size/2))+'px';
-                p.style.marginTop = ''+(-(size/2))+'px';
+        /* Au début de chaque zoom, enleve le nom des planetes */
+        map.on('zoomstart',function(){
+            if(showName){
+                displayName();
             }
-        }
-        /* A la fin de chaque zoom, change la taille des markers */
+        });
+        /* A la fin de chaque zoom, redimensionne les planetes et change leur position si besoin */
         map.on('zoomend',function(){
+            let values = chooseSize();
+            let size = values[0];
+            let margin = values[1];
+            setSizePlanet(size);
+            setSizeName(size,margin);
+            if(showName){
+                displayName();
+            }
+            if(map.getZoom() > 3){
+                moveMarkers(getVisibleMarker(markers));
+            }
+        });
+        /* A la fin de chaque mouvement, change la positions des planetes si besoin */
+        map.on('moveend',function(){
+            if(map.getZoom() > 3){
+                moveMarkers(getVisibleMarker(markers));
+            }
+        });
+
+        map.on('overlayadd',function(e){
+            if(e.name == "Planete"){
+                let values = chooseSize();
+                let size = values[0];
+                let margin = values[1];
+                setSizePlanet(size);
+                setSizeName(size,margin);
+            }else if(e.name == "Name"){
+                showName = true;
+                displayName();
+            }
+        });
+
+        map.on('overlayremove',function(e){
+            if(e.name == "Name"){
+                showName = false;
+                displayName();
+            }
+        })
+
+        function chooseSize(){
             let size = 0;
+            let margin = 0;
             switch(map.getZoom()){
                 case 1:
                     size = 5;
+                    margin = 0;
                     break;
                 case 2:
                     size = 10;
+                    margin = 5;
                     break;
                 case 3:
                     size = 20;
+                    margin = 10;
                     break;
                 case 4:
                     size = 40;
+                    margin = 20;
+                    break;
+                case 5:
+                    size = 60;
+                    margin = 25;
+                    break;
+                default:
                     break;
             }
-            setSizePlanet(size);
-        });
-
-        let input = document.querySelector(".div-input");
-        input.addEventListener("click",function(e){
-            if(e.target.nodeName == "P"){
-                let wantedMarker = getMarker(e.target.textContent);
-                let pos = wantedMarker.getLatLng();
-                map.setView(pos,4);
-            }
-        });
-
-        function getMarker(id){
-            for(let m of markers){
-                if(m._icon.id == id){
-                    return m;
-                }
-            }
+            return [size,margin];
         }
     </script>
+    <script type="text/javascript" src="scripts/initializeMap.js"></script>
+    <script type="text/javascript" src="scripts/input.js"></script>
+    <script type="text/javascript" src="scripts/handlerPlanetSizePosition.js"></script>
 </body>
 </html>
 
